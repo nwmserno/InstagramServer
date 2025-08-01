@@ -1,0 +1,35 @@
+workflows:
+  ios-workflow:
+    name: iOS Build Workflow
+    environment:
+      xcode: latest
+      cocoapods: default
+      vars:
+        XCODE_PROJECT: "ios/Runner.xcworkspace"
+        XCODE_SCHEME: "Runner"
+        BUNDLE_ID: "com.example.instrument"
+        TEAM_ID: "YOUR_TEAM_ID" # Replace with your Apple Team ID
+      flutter: stable
+      node: latest
+    scripts:
+      - name: Get Flutter packages
+        script: |
+          flutter packages pub get
+      - name: Flutter build ipa
+        script: |
+          flutter build ipa --release \
+            --export-options-plist=ios/exportOptions.plist
+    artifacts:
+      - build/ios/ipa/*.ipa
+      - /tmp/xcodebuild_logs/*.log
+      - flutter_drive.log
+    publishing:
+      app_store_connect:
+        api_key: $APP_STORE_CONNECT_PRIVATE_KEY
+        key_id: $APP_STORE_CONNECT_KEY_IDENTIFIER
+        issuer_id: $APP_STORE_CONNECT_ISSUER_ID
+        submit_to_testflight: true
+      email:
+        recipients:
+          - your-email@example.com
+    max_build_duration: 60 
