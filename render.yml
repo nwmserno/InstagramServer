@@ -1,0 +1,55 @@
+services:
+  - type: web
+    name: instagram-server-api
+    env: node
+    plan: starter
+    buildCommand: npm install
+    startCommand: node index.js
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: 10000
+      - key: IG_USERNAME
+        sync: false
+      - key: IG_PASSWORD
+        sync: false
+      - key: SUPABASE_URL
+        sync: false
+      - key: SUPABASE_ANON_KEY
+        sync: false
+      - key: EMAIL_USER
+        sync: false
+      - key: EMAIL_PASS
+        sync: false
+      - key: EMAIL_HOST
+        value: smtp.gmail.com
+      - key: EMAIL_PORT
+        value: 587
+      - key: EMAIL_SECURE
+        value: false
+    healthCheckPath: /api/session/status
+    autoDeploy: true
+    branch: main
+    numInstances: 1
+    disk:
+      name: data-disk
+      mountPath: /opt/render/project/src/data
+      sizeGB: 1
+    headers:
+      - path: /*
+        name: Access-Control-Allow-Origin
+        value: "*"
+      - path: /*
+        name: Access-Control-Allow-Methods
+        value: "GET, POST, PUT, DELETE, OPTIONS"
+      - path: /*
+        name: Access-Control-Allow-Headers
+        value: "Content-Type, Authorization"
+    routes:
+      - type: rewrite
+        source: /api/*
+        destination: /api/*
+      - type: rewrite
+        source: /*
+        destination: /api/session/status 
