@@ -1,0 +1,304 @@
+{
+  "logs": [
+    {
+      "timestamp": 1753982511,
+      "datetime": "1/8/2568 00:21:51",
+      "action": "schedule_cleanup",
+      "details": {
+        "current_time": "1/8/2568 00:21:51",
+        "next_cleanup": "1/8/2568 22:00:00",
+        "wait_minutes": 1298
+      }
+    },
+    {
+      "timestamp": 1753982787,
+      "datetime": "1/8/2568 00:26:27",
+      "action": "schedule_cleanup",
+      "details": {
+        "current_time": "1/8/2568 00:26:27",
+        "next_cleanup": "1/8/2568 22:00:00",
+        "wait_minutes": 1293
+      }
+    },
+    {
+      "timestamp": 1753982798,
+      "datetime": "1/8/2568 00:26:38",
+      "action": "schedule_cleanup",
+      "details": {
+        "current_time": "1/8/2568 00:26:38",
+        "next_cleanup": "1/8/2568 22:00:00",
+        "wait_minutes": 1293
+      }
+    },
+    {
+      "timestamp": 1753982843,
+      "datetime": "1/8/2568 00:27:23",
+      "action": "schedule_cleanup",
+      "details": {
+        "current_time": "1/8/2568 00:27:23",
+        "next_cleanup": "1/8/2568 22:00:00",
+        "wait_minutes": 1292
+      }
+    },
+    {
+      "timestamp": 1753982887,
+      "datetime": "1/8/2568 00:28:07",
+      "action": "schedule_cleanup",
+      "details": {
+        "current_time": "1/8/2568 00:28:07",
+        "next_cleanup": "1/8/2568 22:00:00",
+        "wait_minutes": 1291
+      }
+    },
+    {
+      "timestamp": 1753983188,
+      "datetime": "1/8/2568 00:33:08",
+      "action": "schedule_cleanup",
+      "details": {
+        "current_time": "1/8/2568 00:33:08",
+        "next_cleanup": "1/8/2568 22:00:00",
+        "wait_minutes": 1286
+      }
+    },
+    {
+      "timestamp": 1753983846,
+      "datetime": "1/8/2568 00:44:06",
+      "action": "schedule_cleanup",
+      "details": {
+        "current_time": "1/8/2568 00:44:06",
+        "next_cleanup": "1/8/2568 22:00:00",
+        "wait_minutes": 1275
+      }
+    },
+    {
+      "timestamp": 1753984224,
+      "datetime": "1/8/2568 00:50:24",
+      "action": "schedule_cleanup",
+      "details": {
+        "current_time": "1/8/2568 00:50:24",
+        "next_cleanup": "1/8/2568 22:00:00",
+        "wait_minutes": 1269
+      }
+    },
+    {
+      "timestamp": 1753986215,
+      "datetime": "1/8/2568 01:23:35",
+      "action": "schedule_cleanup",
+      "details": {
+        "current_time": "1/8/2568 01:23:35",
+        "next_cleanup": "1/8/2568 22:00:00",
+        "wait_minutes": 1236
+      }
+    },
+    {
+      "timestamp": 1753986926,
+      "datetime": "1/8/2568 01:35:26",
+      "action": "schedule_cleanup",
+      "details": {
+        "current_time": "1/8/2568 01:35:26",
+        "next_cleanup": "1/8/2568 22:00:00",
+        "wait_minutes": 1224
+      }
+    },
+    {
+      "timestamp": 1753986941,
+      "datetime": "1/8/2568 01:35:41",
+      "action": "schedule_cleanup",
+      "details": {
+        "current_time": "1/8/2568 01:35:41",
+        "next_cleanup": "1/8/2568 22:00:00",
+        "wait_minutes": 1224
+      }
+    },
+    {
+      "timestamp": 1753986968,
+      "datetime": "1/8/2568 01:36:08",
+      "action": "schedule_cleanup",
+      "details": {
+        "current_time": "1/8/2568 01:36:08",
+        "next_cleanup": "1/8/2568 22:00:00",
+        "wait_minutes": 1223
+      }
+    },
+    {
+      "timestamp": 1753987445,
+      "datetime": "1/8/2568 01:44:05",
+      "action": "schedule_cleanup",
+      "details": {
+        "current_time": "1/8/2568 01:44:05",
+        "next_cleanup": "1/8/2568 22:00:00",
+        "wait_minutes": 1215
+      }
+    },
+    {
+      "timestamp": 1753987847,
+      "datetime": "1/8/2568 01:50:47",
+      "action": "schedule_cleanup",
+      "details": {
+        "current_time": "1/8/2568 01:50:47",
+        "next_cleanup": "1/8/2568 22:00:00",
+        "wait_minutes": 1209
+      }
+    },
+    {
+      "timestamp": 1753988007,
+      "datetime": "1/8/2568 01:53:27",
+      "action": "schedule_cleanup",
+      "details": {
+        "current_time": "1/8/2568 01:53:27",
+        "next_cleanup": "1/8/2568 22:00:00",
+        "wait_minutes": 1206
+      }
+    },
+    {
+      "timestamp": 1753988073,
+      "datetime": "1/8/2568 01:54:33",
+      "action": "schedule_cleanup",
+      "details": {
+        "current_time": "1/8/2568 01:54:33",
+        "next_cleanup": "1/8/2568 22:00:00",
+        "wait_minutes": 1205
+      }
+    },
+    {
+      "timestamp": 1753988097,
+      "datetime": "1/8/2568 01:54:57",
+      "action": "schedule_cleanup",
+      "details": {
+        "current_time": "1/8/2568 01:54:57",
+        "next_cleanup": "1/8/2568 22:00:00",
+        "wait_minutes": 1205
+      }
+    },
+    {
+      "timestamp": 1753988177,
+      "datetime": "1/8/2568 01:56:17",
+      "action": "schedule_cleanup",
+      "details": {
+        "current_time": "1/8/2568 01:56:17",
+        "next_cleanup": "1/8/2568 22:00:00",
+        "wait_minutes": 1203
+      }
+    },
+    {
+      "timestamp": 1753988344,
+      "datetime": "1/8/2568 01:59:04",
+      "action": "schedule_cleanup",
+      "details": {
+        "current_time": "1/8/2568 01:59:04",
+        "next_cleanup": "1/8/2568 22:00:00",
+        "wait_minutes": 1200
+      }
+    },
+    {
+      "timestamp": 1753988545,
+      "datetime": "1/8/2568 02:02:25",
+      "action": "schedule_cleanup",
+      "details": {
+        "current_time": "1/8/2568 02:02:25",
+        "next_cleanup": "1/8/2568 22:00:00",
+        "wait_minutes": 1197
+      }
+    },
+    {
+      "timestamp": 1753988925,
+      "datetime": "1/8/2568 02:08:45",
+      "action": "schedule_cleanup",
+      "details": {
+        "current_time": "1/8/2568 02:08:45",
+        "next_cleanup": "1/8/2568 22:00:00",
+        "wait_minutes": 1191
+      }
+    },
+    {
+      "timestamp": 1753990219,
+      "datetime": "1/8/2568 02:30:19",
+      "action": "schedule_cleanup",
+      "details": {
+        "current_time": "1/8/2568 02:30:19",
+        "next_cleanup": "1/8/2568 22:00:00",
+        "wait_minutes": 1169
+      }
+    },
+    {
+      "timestamp": 1753990277,
+      "datetime": "1/8/2568 02:31:17",
+      "action": "schedule_cleanup",
+      "details": {
+        "current_time": "1/8/2568 02:31:17",
+        "next_cleanup": "1/8/2568 22:00:00",
+        "wait_minutes": 1168
+      }
+    },
+    {
+      "timestamp": 1753990418,
+      "datetime": "1/8/2568 02:33:38",
+      "action": "schedule_cleanup",
+      "details": {
+        "current_time": "1/8/2568 02:33:38",
+        "next_cleanup": "1/8/2568 22:00:00",
+        "wait_minutes": 1166
+      }
+    },
+    {
+      "timestamp": 1753990554,
+      "datetime": "1/8/2568 02:35:54",
+      "action": "schedule_cleanup",
+      "details": {
+        "current_time": "1/8/2568 02:35:54",
+        "next_cleanup": "1/8/2568 22:00:00",
+        "wait_minutes": 1164
+      }
+    },
+    {
+      "timestamp": 1753990571,
+      "datetime": "1/8/2568 02:36:11",
+      "action": "schedule_cleanup",
+      "details": {
+        "current_time": "1/8/2568 02:36:11",
+        "next_cleanup": "1/8/2568 22:00:00",
+        "wait_minutes": 1163
+      }
+    },
+    {
+      "timestamp": 1754028657,
+      "datetime": "1/8/2568 13:10:57",
+      "action": "schedule_cleanup",
+      "details": {
+        "current_time": "1/8/2568 13:10:57",
+        "next_cleanup": "1/8/2568 22:00:00",
+        "wait_minutes": 529
+      }
+    },
+    {
+      "timestamp": 1754029257,
+      "datetime": "1/8/2568 13:20:57",
+      "action": "cleanup_session_log",
+      "details": {
+        "deleted_count": 5,
+        "remaining_count": 1,
+        "oldest_age_minutes": 650
+      }
+    },
+    {
+      "timestamp": 1754033035,
+      "datetime": "1/8/2568 14:23:55",
+      "action": "schedule_cleanup",
+      "details": {
+        "current_time": "1/8/2568 14:23:55",
+        "next_cleanup": "1/8/2568 22:00:00",
+        "wait_minutes": 456
+      }
+    },
+    {
+      "timestamp": 1754035022,
+      "datetime": "1/8/2568 14:57:02",
+      "action": "schedule_cleanup",
+      "details": {
+        "current_time": "1/8/2568 14:57:02",
+        "next_cleanup": "1/8/2568 22:00:00",
+        "wait_minutes": 422
+      }
+    }
+  ]
+}

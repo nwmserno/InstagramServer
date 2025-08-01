@@ -1,0 +1,189 @@
+{
+  "lastCheckTime": null,
+  "checkCount": 0,
+  "dailyCheckLimit": 10,
+  "resetTime": null,
+  "minIntervalMinutes": 30,
+  "maxChecksPerHour": 2,
+  "hourlyChecks": [],
+  "dailyChecks": [],
+  "advancedProtection": {
+    "randomDelays": {
+      "enabled": true,
+      "minSeconds": 120,
+      "maxSeconds": 300
+    },
+    "sessionManagement": {
+      "maxSessionsPerDay": 1,
+      "sessionTimeoutMinutes": 60,
+      "currentSessionStart": null,
+      "sessionCount": 0
+    },
+    "userAgentRotation": {
+      "enabled": true,
+      "userAgents": [
+        "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+        "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+        "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:121.0) Gecko/20100101 Firefox/121.0",
+        "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.1 Safari/605.1.15",
+        "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/119.0.0.0 Safari/537.36 Edg/119.0.0.0",
+        "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
+      ],
+      "currentIndex": 0,
+      "rotationInterval": 5
+    },
+    "requestPatterns": {
+      "maxConsecutiveRequests": 2,
+      "cooldownMinutes": 30,
+      "consecutiveCount": 0,
+      "lastConsecutiveTime": null
+    },
+    "errorHandling": {
+      "maxErrorsPerHour": 1,
+      "errorCooldownMinutes": 240,
+      "errorCount": 0,
+      "lastErrorTime": null,
+      "suspiciousErrors": [
+        "checkpoint",
+        "login required",
+        "spam",
+        "feedback_required",
+        "challenge",
+        "temporarily blocked",
+        "suspended",
+        "disabled",
+        "bad password",
+        "rate limit",
+        "too many requests",
+        "429",
+        "403",
+        "blocked",
+        "restricted",
+        "unusual activity",
+        "suspicious",
+        "automated",
+        "bot",
+        "captcha",
+        "we can send you an email to help you get back into your account",
+        "account has been disabled",
+        "account has been suspended",
+        "account has been blocked",
+        "account has been restricted",
+        "account has been banned",
+        "account has been locked",
+        "account has been frozen",
+        "account has been terminated"
+      ]
+    },
+    "timeBasedRestrictions": {
+      "peakHours": {
+        "start": "09:00",
+        "end": "18:00",
+        "reducedLimit": 0.3
+      },
+      "nightMode": {
+        "start": "22:00",
+        "end": "06:00",
+        "enabled": true,
+        "reducedLimit": 0.1
+      },
+      "weekendMode": {
+        "enabled": true,
+        "reducedLimit": 0.5
+      }
+    },
+    "geographicSimulation": {
+      "enabled": true,
+      "timezone": "Asia/Bangkok",
+      "workingHours": {
+        "start": "08:00",
+        "end": "20:00"
+      },
+      "holidayMode": {
+        "enabled": true,
+        "reducedLimit": 0.2
+      }
+    },
+    "behavioralPatterns": {
+      "humanLikeDelays": {
+        "enabled": true,
+        "typingDelay": {
+          "minMs": 200,
+          "maxMs": 500
+        },
+        "readingDelay": {
+          "minMs": 3000,
+          "maxMs": 8000
+        },
+        "thinkingDelay": {
+          "minMs": 1000,
+          "maxMs": 3000
+        }
+      },
+      "sessionBreaks": {
+        "enabled": true,
+        "minBreakMinutes": 60,
+        "maxBreakMinutes": 240,
+        "breakProbability": 0.5
+      },
+      "mouseMovements": {
+        "enabled": true,
+        "simulateScroll": true,
+        "randomClicks": true
+      }
+    },
+    "adaptiveLimits": {
+      "enabled": true,
+      "successRateThreshold": 0.9,
+      "currentSuccessRate": 1.0,
+      "dynamicAdjustment": {
+        "increaseOnSuccess": 0.05,
+        "decreaseOnError": 0.3,
+        "minMultiplier": 0.2,
+        "maxMultiplier": 1.2
+      }
+    },
+    "fingerprintProtection": {
+      "enabled": true,
+      "randomizeHeaders": true,
+      "varyAcceptLanguage": true,
+      "rotateCookies": true,
+      "simulateScreenResolution": true
+    },
+    "progressiveBackoff": {
+      "enabled": true,
+      "baseDelayMinutes": 5,
+      "maxDelayHours": 24,
+      "multiplier": 2
+    }
+  },
+  "statistics": {
+    "totalRequests": 0,
+    "successfulRequests": 0,
+    "failedRequests": 0,
+    "lastSuccessTime": null,
+    "lastFailureTime": null,
+    "averageResponseTime": 0,
+    "responseTimes": [],
+    "consecutiveFailures": 0,
+    "consecutiveSuccesses": 0
+  },
+  "safetyMode": {
+    "enabled": false,
+    "triggeredBy": null,
+    "activationTime": null,
+    "durationMinutes": 240,
+    "autoRecovery": {
+      "enabled": true,
+      "recoveryTimeHours": 6,
+      "gradualIncrease": true
+    }
+  },
+  "emergencyMode": {
+    "enabled": false,
+    "triggeredBy": null,
+    "activationTime": null,
+    "durationHours": 24,
+    "requiresManualReset": true
+  }
+} 

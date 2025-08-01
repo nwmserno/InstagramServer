@@ -1,0 +1,23 @@
+[
+  {
+    "timestamp": "2025-08-01T06:10:57.959Z",
+    "action": "login",
+    "details": "login ล้มเหลว: Error: getaddrinfo ENOTFOUND i.instagram.com",
+    "isLoggedIn": false,
+    "sessionValid": false
+  },
+  {
+    "timestamp": "2025-08-01T07:23:55.036Z",
+    "action": "login",
+    "details": "login ใหม่สำเร็จ",
+    "isLoggedIn": true,
+    "sessionValid": true
+  },
+  {
+    "timestamp": "2025-08-01T07:57:02.141Z",
+    "action": "login",
+    "details": "login ใหม่สำเร็จ",
+    "isLoggedIn": true,
+    "sessionValid": true
+  }
+]
