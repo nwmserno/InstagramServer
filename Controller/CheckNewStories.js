@@ -360,7 +360,7 @@ async function sendStoriesEmail(username, storyInfo, email, isNotification = fal
 async function sendBulkStoriesEmail(usersData, email, isNotification = false, changes = null) {
   try {
     const nodemailer = require('nodemailer');
-    let transporter = nodemailer.createTransporter({
+          let transporter = nodemailer.createTransport({
       service: 'gmail',
       auth: {
         user: process.env.EMAIL_USER,
