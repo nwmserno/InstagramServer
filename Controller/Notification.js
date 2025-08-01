@@ -4,7 +4,6 @@ const fs = require('fs').promises;
 const path = require('path');
 const { checkUserPrivacy, sendEmail, sendBulkEmail } = require('./CheckUserPrivacy.js');
 const { checkNewStories, sendBulkStoriesEmail } = require('./CheckNewStories.js');
-const nodemailer = require('nodemailer');
 
 // เก็บ scheduled tasks
 const scheduledTasks = new Map();
@@ -705,6 +704,17 @@ async function loadScheduledTasks() {
     
     // โหลด tasks กลับมาและตรวจสอบอีเมลที่ค้างอยู่
     for (const [taskId, task] of Object.entries(tasks)) {
+      // เพิ่ม usernameSettings ถ้าไม่มี (สำหรับข้อมูลเก่า)
+      if (!task.usernameSettings) {
+        task.usernameSettings = {};
+        // ถ้าเป็นข้อมูลเก่า ให้เปิดการแจ้งเตือนสำหรับทุก username
+        if (task.usernames && Array.isArray(task.usernames)) {
+          task.usernames.forEach(username => {
+            task.usernameSettings[username] = true;
+          });
+        }
+      }
+      
       scheduledTasks.set(taskId, task);
       
       // ตรวจสอบและส่งอีเมลที่ค้างอยู่ก่อนตั้งเวลาถัดไป
@@ -743,6 +753,10 @@ async function saveScheduledTasks() {
     const tasksToSave = {};
     for (const [taskId, task] of scheduledTasks.entries()) {
       const { timeoutId, ...taskWithoutTimeout } = task;
+      // ตรวจสอบว่า usernameSettings มีอยู่หรือไม่
+      if (!taskWithoutTimeout.usernameSettings) {
+        taskWithoutTimeout.usernameSettings = {};
+      }
       tasksToSave[taskId] = taskWithoutTimeout;
     }
     
@@ -760,7 +774,17 @@ function generateTaskId(type, email) {
 
 // ฟังก์ชันสำหรับตรวจสอบและส่งอีเมลที่ค้างอยู่
 async function checkAndSendOverdueEmails(taskId, task) {
-  const { type, usernames, email, checkFrequency, nextRunTime, lastRunTime } = task;
+  const { type, usernames, email, checkFrequency, nextRunTime, lastRunTime, usernameSettings } = task;
+  
+  // กรองเฉพาะ usernames ที่เปิดการแจ้งเตือน
+  const activeUsernames = usernameSettings && Object.keys(usernameSettings).length > 0
+    ? usernames.filter(username => usernameSettings[username] === true)
+    : usernames;
+  
+  if (activeUsernames.length === 0) {
+    console.log(`⏸️ ไม่มี usernames ที่เปิดการแจ้งเตือนสำหรับ ${type} - ข้ามการส่งอีเมลที่ค้างอยู่`);
+    return;
+  }
   
   if (!nextRunTime) return;
   
@@ -778,7 +802,7 @@ async function checkAndSendOverdueEmails(taskId, task) {
         const errors = [];
         
         const validResults = [];
-        for (const username of usernames) {
+        for (const username of activeUsernames) {
           try {
             console.log(`   🔍 ตรวจสอบ Privacy: @${username}`);
             const result = await checkUserPrivacy(username);
@@ -804,7 +828,7 @@ async function checkAndSendOverdueEmails(taskId, task) {
         
         const successCount = results.length;
         const errorCount = errors.length;
-        console.log(`✅ ส่งอีเมล Privacy ที่ค้างอยู่เสร็จสิ้น: ${successCount}/${usernames.length} สำเร็จ`);
+        console.log(`✅ ส่งอีเมล Privacy ที่ค้างอยู่เสร็จสิ้น: ${successCount}/${activeUsernames.length} สำเร็จ`);
         if (errorCount > 0) {
           console.log(`⚠️  มี ${errorCount} usernames ที่เกิด error:`);
           errors.forEach(({ username, error }) => {
@@ -817,7 +841,7 @@ async function checkAndSendOverdueEmails(taskId, task) {
         const results = [];
         const errors = [];
         
-        for (const username of usernames) {
+        for (const username of activeUsernames) {
           try {
             console.log(`   🔍 ตรวจสอบ Stories: @${username}`);
             const result = await checkNewStories(username);
@@ -845,7 +869,7 @@ async function checkAndSendOverdueEmails(taskId, task) {
         
         const successCount = results.length;
         const errorCount = errors.length;
-        console.log(`✅ ส่งอีเมล Stories ที่ค้างอยู่เสร็จสิ้น: ${successCount}/${usernames.length} สำเร็จ`);
+        console.log(`✅ ส่งอีเมล Stories ที่ค้างอยู่เสร็จสิ้น: ${successCount}/${activeUsernames.length} สำเร็จ`);
         if (errorCount > 0) {
           console.log(`⚠️  มี ${errorCount} usernames ที่เกิด error:`);
           errors.forEach(({ username, error }) => {
@@ -866,6 +890,11 @@ async function checkAndSendOverdueEmails(taskId, task) {
       
       console.log(`📝 อัพเดตเวลาถัดไปสำหรับ ${type}: ${new Date(task.nextRunTime).toLocaleString('th-TH', { timeZone: 'Asia/Bangkok' })}`);
       
+      // ตั้งเวลาถัดไปเฉพาะถ้ามี usernames ที่เปิดการแจ้งเตือน
+      if (activeUsernames.length > 0) {
+        scheduleTask(taskId, task);
+      }
+      
     } catch (error) {
       console.log(`❌ Error ส่งอีเมลที่ค้างอยู่ ${type}: ${error.message}`);
     }
@@ -874,7 +903,17 @@ async function checkAndSendOverdueEmails(taskId, task) {
 
 // ฟังก์ชันสำหรับตั้งเวลาทำงาน
 function scheduleTask(taskId, task) {
-  const { type, usernames, email, checkFrequency, nextRunTime } = task;
+  const { type, usernames, email, checkFrequency, nextRunTime, usernameSettings } = task;
+  
+  // กรองเฉพาะ usernames ที่เปิดการแจ้งเตือน
+  const activeUsernames = usernameSettings && Object.keys(usernameSettings).length > 0
+    ? usernames.filter(username => usernameSettings[username] === true)
+    : usernames;
+  
+  if (activeUsernames.length === 0) {
+    console.log(`⏸️ ไม่มี usernames ที่เปิดการแจ้งเตือนสำหรับ ${type} - ไม่ตั้งเวลา`);
+    return;
+  }
   
   // คำนวณเวลาถัดไป
   const now = new Date();
@@ -926,7 +965,22 @@ function getIntervalFromFrequency(checkFrequency) {
 
 // ฟังก์ชันสำหรับทำงานตามเวลาที่กำหนด
 async function executeScheduledTask(taskId, task) {
-  const { type, usernames, email, checkFrequency } = task;
+  const { type, usernames, email, checkFrequency, usernameSettings } = task;
+  
+  // กรองเฉพาะ usernames ที่เปิดการแจ้งเตือน
+  const activeUsernames = usernameSettings && Object.keys(usernameSettings).length > 0
+    ? usernames.filter(username => usernameSettings[username] === true)
+    : usernames;
+  
+  if (activeUsernames.length === 0) {
+    console.log(`⏸️ ไม่มี usernames ที่เปิดการแจ้งเตือนสำหรับ ${type} - ข้ามการทำงาน`);
+    // ตั้งเวลาถัดไปแม้ไม่มี usernames ที่เปิดอยู่
+    const interval = getIntervalFromFrequency(checkFrequency);
+    task.nextRunTime = new Date(Date.now() + interval).toISOString();
+    await saveScheduledTasks();
+    scheduleTask(taskId, task);
+    return;
+  }
   
   console.log(`🚀 เริ่มทำงานตามเวลา: ${type} สำหรับ ${email}`);
   
@@ -937,7 +991,7 @@ async function executeScheduledTask(taskId, task) {
       const errors = [];
       
       const validResults = [];
-      for (const username of usernames) {
+      for (const username of activeUsernames) {
         try {
           console.log(`   🔍 ตรวจสอบ Privacy: @${username}`);
           const result = await checkUserPrivacy(username);
@@ -963,7 +1017,7 @@ async function executeScheduledTask(taskId, task) {
       
       const successCount = results.length;
       const errorCount = errors.length;
-      console.log(`✅ ตรวจสอบ Privacy เสร็จสิ้น: ${successCount}/${usernames.length} สำเร็จ`);
+      console.log(`✅ ตรวจสอบ Privacy เสร็จสิ้น: ${successCount}/${activeUsernames.length} สำเร็จ`);
       if (errorCount > 0) {
         console.log(`⚠️  มี ${errorCount} usernames ที่เกิด error:`);
         errors.forEach(({ username, error }) => {
@@ -977,7 +1031,7 @@ async function executeScheduledTask(taskId, task) {
       const errors = [];
       
       const validResults = [];
-      for (const username of usernames) {
+      for (const username of activeUsernames) {
         try {
           console.log(`   🔍 ตรวจสอบ Stories: @${username}`);
           const result = await checkNewStories(username);
@@ -1003,7 +1057,7 @@ async function executeScheduledTask(taskId, task) {
       
       const successCount = results.length;
       const errorCount = errors.length;
-      console.log(`✅ ตรวจสอบ Stories เสร็จสิ้น: ${successCount}/${usernames.length} สำเร็จ`);
+      console.log(`✅ ตรวจสอบ Stories เสร็จสิ้น: ${successCount}/${activeUsernames.length} สำเร็จ`);
       if (errorCount > 0) {
         console.log(`⚠️  มี ${errorCount} usernames ที่เกิด error:`);
         errors.forEach(({ username, error }) => {
@@ -1019,7 +1073,11 @@ async function executeScheduledTask(taskId, task) {
     
     // บันทึกและตั้งเวลาถัดไป
     await saveScheduledTasks();
-    scheduleTask(taskId, task);
+    
+    // ตั้งเวลาถัดไปเฉพาะถ้ามี usernames ที่เปิดการแจ้งเตือน
+    if (activeUsernames.length > 0) {
+      scheduleTask(taskId, task);
+    }
     
   } catch (error) {
     console.log(`❌ Error ทำงานตามเวลา ${type}: ${error.message}`);
@@ -1028,7 +1086,11 @@ async function executeScheduledTask(taskId, task) {
     const interval = getIntervalFromFrequency(checkFrequency);
     task.nextRunTime = new Date(Date.now() + interval).toISOString();
     await saveScheduledTasks();
-    scheduleTask(taskId, task);
+    
+    // ตั้งเวลาถัดไปเฉพาะถ้ามี usernames ที่เปิดการแจ้งเตือน
+    if (activeUsernames.length > 0) {
+      scheduleTask(taskId, task);
+    }
   }
 }
 
@@ -1055,8 +1117,18 @@ async function checkAllOverdueEmails() {
   let overdueCount = 0;
   let processedCount = 0;
   
-  for (const [taskId, task] of scheduledTasks.entries()) {
-    const { type, usernames, email, nextRunTime } = task;
+      for (const [taskId, task] of scheduledTasks.entries()) {
+      const { type, usernames, email, nextRunTime, usernameSettings } = task;
+      
+      // กรองเฉพาะ usernames ที่เปิดการแจ้งเตือน
+      const activeUsernames = usernameSettings && Object.keys(usernameSettings).length > 0
+        ? usernames.filter(username => usernameSettings[username] === true)
+        : usernames;
+      
+      if (activeUsernames.length === 0) {
+        console.log(`⏸️ ไม่มี usernames ที่เปิดการแจ้งเตือนสำหรับ ${type} - ข้ามการส่งอีเมลที่ค้างอยู่`);
+        continue;
+      }
     
     if (nextRunTime) {
       const nextRun = new Date(nextRunTime);
@@ -1404,12 +1476,16 @@ async function sendStoriesEmail(username, info, email, isNotification = false, c
 // API endpoint สำหรับตั้งเวลาการแจ้งเตือน
 router.post('/schedule-notification', async (req, res) => {
   try {
-    const { type, usernames, email, checkFrequency, isActive } = req.body;
+    const { type, usernames, email, checkFrequency, isActive, usernameSettings } = req.body;
     
     console.log(`📅 ตั้งเวลาการแจ้งเตือน: ${type} สำหรับ ${email}`);
     console.log(`   👤 Usernames: ${usernames?.join(', ')}`);
     console.log(`   ⏰ Frequency: ${checkFrequency}`);
     console.log(`   🔔 Active: ${isActive}`);
+    if (usernameSettings) {
+      const activeUsernames = usernames.filter(username => usernameSettings[username] === true);
+      console.log(`   ✅ Active Usernames: ${activeUsernames.join(', ')}`);
+    }
     
     if (!type || !usernames || !email || checkFrequency === undefined) {
       return res.status(400).json({ error: 'กรุณาระบุ type, usernames, email, และ checkFrequency' });
@@ -1442,6 +1518,7 @@ router.post('/schedule-notification', async (req, res) => {
         email,
         checkFrequency,
         isActive,
+        usernameSettings: usernameSettings || {},
         createdAt: now.toISOString(),
         nextRunTime,
         lastRunTime: null
@@ -1456,6 +1533,7 @@ router.post('/schedule-notification', async (req, res) => {
         success: true, 
         taskId,
         nextRunTime,
+        usernameSettings: task.usernameSettings,
         message: `ตั้งเวลาการแจ้งเตือน ${type} สำเร็จ`
       });
     } else {
@@ -1469,6 +1547,7 @@ router.post('/schedule-notification', async (req, res) => {
         email,
         checkFrequency,
         isActive: false,
+        usernameSettings: usernameSettings || {},
         createdAt: now.toISOString(),
         nextRunTime: null,
         lastRunTime: null
@@ -1481,6 +1560,7 @@ router.post('/schedule-notification', async (req, res) => {
       res.json({ 
         success: true, 
         taskId,
+        usernameSettings: task.usernameSettings,
         message: `หยุดการแจ้งเตือน ${type} สำเร็จ`
       });
     }
@@ -1501,6 +1581,7 @@ router.get('/scheduled-tasks', async (req, res) => {
       usernames: task.usernames,
       checkFrequency: task.checkFrequency,
       isActive: task.isActive,
+      usernameSettings: task.usernameSettings || {},
       createdAt: task.createdAt,
       nextRunTime: task.nextRunTime,
       lastRunTime: task.lastRunTime
@@ -1560,7 +1641,7 @@ router.post('/check-overdue-emails', async (req, res) => {
             const errors = [];
             
             const validResults = [];
-            for (const username of usernames) {
+            for (const username of activeUsernames) {
               try {
                 console.log(`   🔍 ตรวจสอบ Privacy: @${username}`);
                 const result = await checkUserPrivacy(username);
@@ -1586,7 +1667,7 @@ router.post('/check-overdue-emails', async (req, res) => {
             
             successCount += results.length;
             totalErrors.push(...errors.map(e => ({ ...e, type: 'privacy', email })));
-            console.log(`✅ ส่งอีเมล Privacy ที่ค้างอยู่เสร็จสิ้น: ${results.length}/${usernames.length} สำเร็จ`);
+            console.log(`✅ ส่งอีเมล Privacy ที่ค้างอยู่เสร็จสิ้น: ${results.length}/${activeUsernames.length} สำเร็จ`);
             if (errors.length > 0) {
               console.log(`⚠️  มี ${errors.length} usernames ที่เกิด error:`);
               errors.forEach(({ username, error }) => {
@@ -1600,7 +1681,7 @@ router.post('/check-overdue-emails', async (req, res) => {
             const errors = [];
             
             const validResults = [];
-            for (const username of usernames) {
+            for (const username of activeUsernames) {
               try {
                 console.log(`   🔍 ตรวจสอบ Stories: @${username}`);
                 const result = await checkNewStories(username);
@@ -1634,7 +1715,7 @@ router.post('/check-overdue-emails', async (req, res) => {
             
             successCount += results.length;
             totalErrors.push(...errors.map(e => ({ ...e, type: 'stories', email })));
-            console.log(`✅ ส่งอีเมล Stories ที่ค้างอยู่เสร็จสิ้น: ${results.length}/${usernames.length} สำเร็จ`);
+            console.log(`✅ ส่งอีเมล Stories ที่ค้างอยู่เสร็จสิ้น: ${results.length}/${activeUsernames.length} สำเร็จ`);
             if (errors.length > 0) {
               console.log(`⚠️  มี ${errors.length} usernames ที่เกิด error:`);
               errors.forEach(({ username, error }) => {
@@ -1643,12 +1724,17 @@ router.post('/check-overdue-emails', async (req, res) => {
             }
           }
           
-          // อัพเดตเวลารันล่าสุด
-          task.lastRunTime = new Date().toISOString();
-          
-        } catch (error) {
-          console.log(`❌ Error ส่งอีเมลที่ค้างอยู่ ${type}: ${error.message}`);
-        }
+                // อัพเดตเวลารันล่าสุด
+      task.lastRunTime = new Date().toISOString();
+      
+      // ตั้งเวลาถัดไปเฉพาะถ้ามี usernames ที่เปิดการแจ้งเตือน
+      if (activeUsernames.length > 0) {
+        scheduleTask(taskId, task);
+      }
+      
+    } catch (error) {
+      console.log(`❌ Error ส่งอีเมลที่ค้างอยู่ ${type}: ${error.message}`);
+    }
       }
     }
     
@@ -1840,7 +1926,7 @@ router.post('/reset-overdue-check', async (req, res) => {
 router.put('/scheduled-task/:taskId', async (req, res) => {
   try {
     const { taskId } = req.params;
-    const { usernames, email, checkFrequency, isActive } = req.body;
+    const { usernames, email, checkFrequency, isActive, usernameSettings } = req.body;
     
     if (!scheduledTasks.has(taskId)) {
       return res.status(404).json({ error: 'ไม่พบ scheduled task' });
@@ -1858,6 +1944,7 @@ router.put('/scheduled-task/:taskId', async (req, res) => {
     task.email = email || task.email;
     task.checkFrequency = checkFrequency !== undefined ? checkFrequency : task.checkFrequency;
     task.isActive = isActive !== undefined ? isActive : task.isActive;
+    task.usernameSettings = usernameSettings || task.usernameSettings || {};
     task.lastRunTime = null; // รีเซ็ตเวลารันล่าสุด
     task.nextRunTime = null; // รีเซ็ตเวลารันถัดไป
     
@@ -1879,6 +1966,7 @@ router.put('/scheduled-task/:taskId', async (req, res) => {
         email: task.email,
         checkFrequency: task.checkFrequency,
         isActive: task.isActive,
+        usernameSettings: task.usernameSettings,
         nextRunTime: task.nextRunTime
       }
     });
