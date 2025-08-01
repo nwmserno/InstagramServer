@@ -4,6 +4,7 @@ const fs = require('fs').promises;
 const path = require('path');
 const { checkUserPrivacy, sendEmail, sendBulkEmail } = require('./CheckUserPrivacy.js');
 const { checkNewStories, sendBulkStoriesEmail } = require('./CheckNewStories.js');
+const nodemailer = require('nodemailer');
 
 // เก็บ scheduled tasks
 const scheduledTasks = new Map();
