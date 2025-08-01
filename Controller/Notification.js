@@ -753,7 +753,10 @@ async function saveScheduledTasks() {
 }
 
 // ฟังก์ชันสำหรับสร้าง task ID
-function generateTaskId(type, email) {
+function generateTaskId(type, email, username = null) {
+  if (username) {
+    return `${type}_${email}_${username}_${Date.now()}`;
+  }
   return `${type}_${email}_${Date.now()}`;
 }
 
@@ -772,19 +775,19 @@ async function checkAndSendOverdueEmails(taskId, task) {
     
     try {
       if (type === 'privacy') {
-        // ตรวจสอบ Privacy ที่ค้างอยู่
+        // ตรวจสอบ Privacy ที่ค้างอยู่ แยกสำหรับแต่ละ username
         const results = [];
         const errors = [];
         
-        const validResults = [];
         for (const username of usernames) {
           try {
             console.log(`   🔍 ตรวจสอบ Privacy: @${username}`);
             const result = await checkUserPrivacy(username);
             if (result && !result.error) {
-              validResults.push(result);
+              // ส่งอีเมลแยกสำหรับแต่ละ username
+              await sendBulkEmail([result], email, true);
+              console.log(`   ✅ ส่งอีเมล Privacy สำเร็จสำหรับ @${username}`);
               results.push(result);
-              console.log(`   ✅ ตรวจสอบ Privacy สำเร็จ: @${username}`);
             } else {
               errors.push({ username, error: result?.error || 'Unknown error' });
               console.log(`   ❌ Error ตรวจสอบ Privacy: @${username} - ${result?.error || 'Unknown error'}`);
@@ -793,12 +796,6 @@ async function checkAndSendOverdueEmails(taskId, task) {
             errors.push({ username, error: error.message });
             console.log(`   ❌ Error ตรวจสอบ Privacy: @${username} - ${error.message}`);
           }
-        }
-        
-        // ส่งอีเมลรวมสำหรับผลลัพธ์ที่สำเร็จ
-        if (validResults.length > 0) {
-          await sendBulkEmail(validResults, email, true);
-          console.log(`   ✅ ส่งอีเมล Privacy รวม ${validResults.length} บัญชีสำเร็จ`);
         }
         
         const successCount = results.length;
@@ -812,7 +809,7 @@ async function checkAndSendOverdueEmails(taskId, task) {
         }
         
       } else if (type === 'stories') {
-        // ตรวจสอบ Stories ที่ค้างอยู่
+        // ตรวจสอบ Stories ที่ค้างอยู่ แยกสำหรับแต่ละ username
         const results = [];
         const errors = [];
         
@@ -829,9 +826,10 @@ async function checkAndSendOverdueEmails(taskId, task) {
                 new_stories: result.new_stories || [],
                 message: result.message || 'ตรวจสอบสตอรี่เสร็จสิ้น'
               };
-              await sendStoriesEmail(username, emailContent, email, true);
+              // ส่งอีเมลแยกสำหรับแต่ละ username
+              await sendBulkStoriesEmail([emailContent], email, true);
+              console.log(`   ✅ ส่งอีเมล Stories สำเร็จสำหรับ @${username}`);
               results.push(result);
-              console.log(`   ✅ ส่งอีเมล Stories สำเร็จ: @${username}`);
             } else {
               errors.push({ username, error: result?.error || 'Unknown error' });
               console.log(`   ❌ Error ตรวจสอบ Stories: @${username} - ${result?.error || 'Unknown error'}`);
@@ -931,19 +929,19 @@ async function executeScheduledTask(taskId, task) {
   
   try {
     if (type === 'privacy') {
-      // ตรวจสอบ Privacy
+      // ตรวจสอบ Privacy แยกสำหรับแต่ละ username
       const results = [];
       const errors = [];
       
-      const validResults = [];
       for (const username of usernames) {
         try {
           console.log(`   🔍 ตรวจสอบ Privacy: @${username}`);
           const result = await checkUserPrivacy(username);
           if (result && !result.error) {
-            validResults.push(result);
+            // ส่งอีเมลแยกสำหรับแต่ละ username
+            await sendBulkEmail([result], email, true);
+            console.log(`   ✅ ส่งอีเมล Privacy สำเร็จสำหรับ @${username}`);
             results.push(result);
-            console.log(`   ✅ ตรวจสอบ Privacy สำเร็จ: @${username}`);
           } else {
             errors.push({ username, error: result?.error || 'Unknown error' });
             console.log(`   ❌ Error ตรวจสอบ Privacy: @${username} - ${result?.error || 'Unknown error'}`);
@@ -952,12 +950,6 @@ async function executeScheduledTask(taskId, task) {
           errors.push({ username, error: error.message });
           console.log(`   ❌ Error ตรวจสอบ Privacy: @${username} - ${error.message}`);
         }
-      }
-      
-      // ส่งอีเมลรวมสำหรับผลลัพธ์ที่สำเร็จ
-      if (validResults.length > 0) {
-        await sendBulkEmail(validResults, email, true);
-        console.log(`   ✅ ส่งอีเมล Privacy รวม ${validResults.length} บัญชีสำเร็จ`);
       }
       
       const successCount = results.length;
@@ -971,19 +963,27 @@ async function executeScheduledTask(taskId, task) {
       }
       
     } else if (type === 'stories') {
-      // ตรวจสอบ Stories
+      // ตรวจสอบ Stories แยกสำหรับแต่ละ username
       const results = [];
       const errors = [];
       
-      const validResults = [];
       for (const username of usernames) {
         try {
           console.log(`   🔍 ตรวจสอบ Stories: @${username}`);
           const result = await checkNewStories(username);
           if (result && !result.error) {
-            validResults.push(result);
+            // ส่งอีเมลแยกสำหรับแต่ละ username
+            const emailContent = {
+              username: result.username,
+              full_name: result.full_name || username,
+              story_count: result.story_count || 0,
+              new_story_count: result.new_story_count || 0,
+              new_stories: result.new_stories || [],
+              message: result.message || 'ตรวจสอบสตอรี่เสร็จสิ้น'
+            };
+            await sendBulkStoriesEmail([emailContent], email, true);
+            console.log(`   ✅ ส่งอีเมล Stories สำเร็จสำหรับ @${username}`);
             results.push(result);
-            console.log(`   ✅ ตรวจสอบ Stories สำเร็จ: @${username}`);
           } else {
             errors.push({ username, error: result?.error || 'Unknown error' });
             console.log(`   ❌ Error ตรวจสอบ Stories: @${username} - ${result?.error || 'Unknown error'}`);
@@ -992,12 +992,6 @@ async function executeScheduledTask(taskId, task) {
           errors.push({ username, error: error.message });
           console.log(`   ❌ Error ตรวจสอบ Stories: @${username} - ${error.message}`);
         }
-      }
-      
-      // ส่งอีเมลรวมสำหรับผลลัพธ์ที่สำเร็จ
-      if (validResults.length > 0) {
-        await sendBulkStoriesEmail(validResults, email, true);
-        console.log(`   ✅ ส่งอีเมล Stories รวม ${validResults.length} บัญชีสำเร็จ`);
       }
       
       const successCount = results.length;
@@ -1414,75 +1408,89 @@ router.post('/schedule-notification', async (req, res) => {
       return res.status(400).json({ error: 'กรุณาระบุ type, usernames, email, และ checkFrequency' });
     }
     
-    // หยุด task เดิมถ้ามี
-    const existingTaskId = Array.from(scheduledTasks.keys()).find(key => 
-      key.startsWith(`${type}_${email}_`)
-    );
+    const results = [];
     
-    if (existingTaskId) {
-      const existingTask = scheduledTasks.get(existingTaskId);
-      if (existingTask.timeoutId) {
-        clearTimeout(existingTask.timeoutId);
+    // สร้าง task แยกสำหรับแต่ละ username
+    for (const username of usernames) {
+      // หยุด task เดิมสำหรับ username นี้ถ้ามี
+      const existingTaskIds = Array.from(scheduledTasks.keys()).filter(key => 
+        key.startsWith(`${type}_${email}_${username}_`)
+      );
+      
+      for (const existingTaskId of existingTaskIds) {
+        const existingTask = scheduledTasks.get(existingTaskId);
+        if (existingTask.timeoutId) {
+          clearTimeout(existingTask.timeoutId);
+        }
+        scheduledTasks.delete(existingTaskId);
+        console.log(`🛑 หยุด task เดิม: ${existingTaskId}`);
       }
-      scheduledTasks.delete(existingTaskId);
-      console.log(`🛑 หยุด task เดิม: ${existingTaskId}`);
+      
+      if (isActive) {
+        // สร้าง task ใหม่สำหรับ username นี้
+        const taskId = generateTaskId(type, email, username);
+        const now = new Date();
+        const interval = getIntervalFromFrequency(checkFrequency);
+        const nextRunTime = new Date(now.getTime() + interval).toISOString();
+        
+        const task = {
+          type,
+          usernames: [username], // เก็บเฉพาะ username เดียว
+          email,
+          checkFrequency,
+          isActive,
+          createdAt: now.toISOString(),
+          nextRunTime,
+          lastRunTime: null
+        };
+        
+        scheduledTasks.set(taskId, task);
+        scheduleTask(taskId, task);
+        
+        results.push({
+          username,
+          taskId,
+          nextRunTime,
+          success: true
+        });
+        
+        console.log(`✅ ตั้งเวลาการแจ้งเตือนสำเร็จสำหรับ @${username}: ${taskId}`);
+      } else {
+        // สร้าง task ที่หยุดการทำงานสำหรับ username นี้
+        const taskId = generateTaskId(type, email, username);
+        const now = new Date();
+        
+        const task = {
+          type,
+          usernames: [username], // เก็บเฉพาะ username เดียว
+          email,
+          checkFrequency,
+          isActive: false,
+          createdAt: now.toISOString(),
+          nextRunTime: null,
+          lastRunTime: null
+        };
+        
+        scheduledTasks.set(taskId, task);
+        
+        results.push({
+          username,
+          taskId,
+          success: true
+        });
+        
+        console.log(`✅ หยุดการแจ้งเตือนสำหรับ @${username}: ${taskId}`);
+      }
     }
     
-    if (isActive) {
-      // สร้าง task ใหม่
-      const taskId = generateTaskId(type, email);
-      const now = new Date();
-      const interval = getIntervalFromFrequency(checkFrequency);
-      const nextRunTime = new Date(now.getTime() + interval).toISOString();
-      
-      const task = {
-        type,
-        usernames,
-        email,
-        checkFrequency,
-        isActive,
-        createdAt: now.toISOString(),
-        nextRunTime,
-        lastRunTime: null
-      };
-      
-      scheduledTasks.set(taskId, task);
-      scheduleTask(taskId, task);
-      await saveScheduledTasks();
-      
-      console.log(`✅ ตั้งเวลาการแจ้งเตือนสำเร็จ: ${taskId}`);
-      res.json({ 
-        success: true, 
-        taskId,
-        nextRunTime,
-        message: `ตั้งเวลาการแจ้งเตือน ${type} สำเร็จ`
-      });
-    } else {
-      // สร้าง task ที่หยุดการทำงาน
-      const taskId = generateTaskId(type, email);
-      const now = new Date();
-      
-      const task = {
-        type,
-        usernames,
-        email,
-        checkFrequency,
-        isActive: false,
-        createdAt: now.toISOString(),
-        nextRunTime: null,
-        lastRunTime: null
-      };
-      
-      scheduledTasks.set(taskId, task);
-      await saveScheduledTasks();
-      
-      console.log(`✅ หยุดการแจ้งเตือน: ${type} สำหรับ ${email}`);
-      res.json({ 
-        success: true, 
-        taskId,
-        message: `หยุดการแจ้งเตือน ${type} สำเร็จ`
-      });
-    }
+    await saveScheduledTasks();
+    
+    console.log(`✅ ตั้งเวลาการแจ้งเตือนเสร็จสิ้น: ${results.length} tasks`);
+    res.json({ 
+      success: true, 
+      results,
+      message: `ตั้งเวลาการแจ้งเตือน ${type} สำเร็จสำหรับ ${results.length} usernames`
+    });
     
   } catch (error) {
     console.log(`❌ Error ตั้งเวลาการแจ้งเตือน: ${error.message}`);
@@ -1493,7 +1501,28 @@ router.post('/schedule-notification', async (req, res) => {
 // API endpoint สำหรับดูสถานะ scheduled tasks
 router.get('/scheduled-tasks', async (req, res) => {
   try {
-    const tasks = Array.from(scheduledTasks.entries()).map(([taskId, task]) => ({
+    const { email, username, type } = req.query;
+    
+    let filteredTasks = Array.from(scheduledTasks.entries());
+    
+    // กรองตาม email ถ้ามี
+    if (email) {
+      filteredTasks = filteredTasks.filter(([taskId, task]) => task.email === email);
+    }
+    
+    // กรองตาม username ถ้ามี
+    if (username) {
+      filteredTasks = filteredTasks.filter(([taskId, task]) => 
+        task.usernames.includes(username)
+      );
+    }
+    
+    // กรองตาม type ถ้ามี
+    if (type) {
+      filteredTasks = filteredTasks.filter(([taskId, task]) => task.type === type);
+    }
+    
+    const tasks = filteredTasks.map(([taskId, task]) => ({
       taskId,
       type: task.type,
       email: task.email,
@@ -1887,6 +1916,226 @@ router.put('/scheduled-task/:taskId', async (req, res) => {
   }
 });
 
+// API endpoint สำหรับจัดการการแจ้งเตือนเฉพาะ username
+router.post('/manage-username-notification', async (req, res) => {
+  try {
+    const { action, type, username, email, checkFrequency, isActive } = req.body;
+    
+    console.log(`🔧 จัดการการแจ้งเตือน username: ${action} ${type} สำหรับ @${username} (${email})`);
+    
+    if (!action || !type || !username || !email) {
+      return res.status(400).json({ error: 'กรุณาระบุ action, type, username, และ email' });
+    }
+    
+    let results = [];
+    
+    switch (action) {
+      case 'add':
+        // เพิ่มการแจ้งเตือนใหม่สำหรับ username นี้
+        if (checkFrequency === undefined) {
+          return res.status(400).json({ error: 'กรุณาระบุ checkFrequency สำหรับการเพิ่ม' });
+        }
+        
+        // หยุด task เดิมสำหรับ username นี้ถ้ามี
+        const existingTaskIds = Array.from(scheduledTasks.keys()).filter(key => 
+          key.startsWith(`${type}_${email}_${username}_`)
+        );
+        
+        for (const existingTaskId of existingTaskIds) {
+          const existingTask = scheduledTasks.get(existingTaskId);
+          if (existingTask.timeoutId) {
+            clearTimeout(existingTask.timeoutId);
+          }
+          scheduledTasks.delete(existingTaskId);
+          console.log(`🛑 หยุด task เดิม: ${existingTaskId}`);
+        }
+        
+        if (isActive) {
+          // สร้าง task ใหม่
+          const taskId = generateTaskId(type, email, username);
+          const now = new Date();
+          const interval = getIntervalFromFrequency(checkFrequency);
+          const nextRunTime = new Date(now.getTime() + interval).toISOString();
+          
+          const task = {
+            type,
+            usernames: [username],
+            email,
+            checkFrequency,
+            isActive,
+            createdAt: now.toISOString(),
+            nextRunTime,
+            lastRunTime: null
+          };
+          
+          scheduledTasks.set(taskId, task);
+          scheduleTask(taskId, task);
+          
+          results.push({
+            username,
+            taskId,
+            nextRunTime,
+            action: 'added',
+            success: true
+          });
+          
+          console.log(`✅ เพิ่มการแจ้งเตือนสำเร็จสำหรับ @${username}: ${taskId}`);
+        } else {
+          // สร้าง task ที่หยุดการทำงาน
+          const taskId = generateTaskId(type, email, username);
+          const now = new Date();
+          
+          const task = {
+            type,
+            usernames: [username],
+            email,
+            checkFrequency,
+            isActive: false,
+            createdAt: now.toISOString(),
+            nextRunTime: null,
+            lastRunTime: null
+          };
+          
+          scheduledTasks.set(taskId, task);
+          
+          results.push({
+            username,
+            taskId,
+            action: 'added_inactive',
+            success: true
+          });
+          
+          console.log(`✅ เพิ่มการแจ้งเตือน (ไม่เปิดใช้งาน) สำหรับ @${username}: ${taskId}`);
+        }
+        break;
+        
+      case 'update':
+        // อัพเดตการแจ้งเตือนที่มีอยู่
+        const updateTaskIds = Array.from(scheduledTasks.keys()).filter(key => 
+          key.startsWith(`${type}_${email}_${username}_`)
+        );
+        
+        if (updateTaskIds.length === 0) {
+          return res.status(404).json({ error: `ไม่พบการแจ้งเตือน ${type} สำหรับ @${username}` });
+        }
+        
+        for (const taskId of updateTaskIds) {
+          const task = scheduledTasks.get(taskId);
+          
+          // หยุดการทำงานเก่า
+          if (task.timeoutId) {
+            clearTimeout(task.timeoutId);
+          }
+          
+          // อัพเดตข้อมูล
+          if (checkFrequency !== undefined) task.checkFrequency = checkFrequency;
+          if (isActive !== undefined) task.isActive = isActive;
+          task.lastRunTime = null;
+          task.nextRunTime = null;
+          
+          // เริ่มการทำงานใหม่ถ้า isActive = true
+          if (task.isActive) {
+            scheduleTask(taskId, task);
+          }
+          
+          results.push({
+            username,
+            taskId,
+            action: 'updated',
+            success: true
+          });
+          
+          console.log(`✏️ อัพเดตการแจ้งเตือนสำเร็จสำหรับ @${username}: ${taskId}`);
+        }
+        break;
+        
+      case 'remove':
+        // ลบการแจ้งเตือน
+        const removeTaskIds = Array.from(scheduledTasks.keys()).filter(key => 
+          key.startsWith(`${type}_${email}_${username}_`)
+        );
+        
+        if (removeTaskIds.length === 0) {
+          return res.status(404).json({ error: `ไม่พบการแจ้งเตือน ${type} สำหรับ @${username}` });
+        }
+        
+        for (const taskId of removeTaskIds) {
+          const task = scheduledTasks.get(taskId);
+          if (task.timeoutId) {
+            clearTimeout(task.timeoutId);
+          }
+          scheduledTasks.delete(taskId);
+          
+          results.push({
+            username,
+            taskId,
+            action: 'removed',
+            success: true
+          });
+          
+          console.log(`🗑️ ลบการแจ้งเตือนสำเร็จสำหรับ @${username}: ${taskId}`);
+        }
+        break;
+        
+      case 'toggle':
+        // สลับสถานะการแจ้งเตือน
+        const toggleTaskIds = Array.from(scheduledTasks.keys()).filter(key => 
+          key.startsWith(`${type}_${email}_${username}_`)
+        );
+        
+        if (toggleTaskIds.length === 0) {
+          return res.status(404).json({ error: `ไม่พบการแจ้งเตือน ${type} สำหรับ @${username}` });
+        }
+        
+        for (const taskId of toggleTaskIds) {
+          const task = scheduledTasks.get(taskId);
+          
+          // หยุดการทำงานเก่า
+          if (task.timeoutId) {
+            clearTimeout(task.timeoutId);
+          }
+          
+          // สลับสถานะ
+          task.isActive = !task.isActive;
+          task.lastRunTime = null;
+          task.nextRunTime = null;
+          
+          // เริ่มการทำงานใหม่ถ้า isActive = true
+          if (task.isActive) {
+            scheduleTask(taskId, task);
+          }
+          
+          results.push({
+            username,
+            taskId,
+            action: 'toggled',
+            isActive: task.isActive,
+            success: true
+          });
+          
+          console.log(`🔄 สลับสถานะการแจ้งเตือนสำเร็จสำหรับ @${username}: ${taskId} (${task.isActive ? 'เปิด' : 'ปิด'})`);
+        }
+        break;
+        
+      default:
+        return res.status(400).json({ error: 'Action ไม่ถูกต้อง (add, update, remove, toggle)' });
+    }
+    
+    await saveScheduledTasks();
+    
+    console.log(`✅ จัดการการแจ้งเตือน username เสร็จสิ้น: ${results.length} tasks`);
+    res.json({ 
+      success: true, 
+      results,
+      message: `${action} การแจ้งเตือน ${type} สำเร็จสำหรับ @${username}`
+    });
+    
+  } catch (error) {
+    console.log(`❌ Error จัดการการแจ้งเตือน username: ${error.message}`);
+    res.status(500).json({ error: 'เกิดข้อผิดพลาดในการจัดการการแจ้งเตือน' });
+  }
+});
+
 // API endpoint สำหรับลบ scheduled task
 router.delete('/scheduled-task/:taskId', async (req, res) => {
   try {
@@ -1908,6 +2157,71 @@ router.delete('/scheduled-task/:taskId', async (req, res) => {
   } catch (error) {
     console.log(`❌ Error ลบ scheduled task: ${error.message}`);
     res.status(500).json({ error: 'เกิดข้อผิดพลาดในการลบ' });
+  }
+});
+
+// API endpoint สำหรับดูการแจ้งเตือนเฉพาะ username
+router.get('/username-notifications', async (req, res) => {
+  try {
+    const { email, username, type } = req.query;
+    
+    if (!email) {
+      return res.status(400).json({ error: 'กรุณาระบุ email' });
+    }
+    
+    let filteredTasks = Array.from(scheduledTasks.entries());
+    
+    // กรองตาม email
+    filteredTasks = filteredTasks.filter(([taskId, task]) => task.email === email);
+    
+    // กรองตาม username ถ้ามี
+    if (username) {
+      filteredTasks = filteredTasks.filter(([taskId, task]) => 
+        task.usernames.includes(username)
+      );
+    }
+    
+    // กรองตาม type ถ้ามี
+    if (type) {
+      filteredTasks = filteredTasks.filter(([taskId, task]) => task.type === type);
+    }
+    
+    // จัดกลุ่มตาม username
+    const usernameGroups = {};
+    
+    filteredTasks.forEach(([taskId, task]) => {
+      task.usernames.forEach(username => {
+        if (!usernameGroups[username]) {
+          usernameGroups[username] = {
+            username,
+            notifications: []
+          };
+        }
+        
+        usernameGroups[username].notifications.push({
+          taskId,
+          type: task.type,
+          checkFrequency: task.checkFrequency,
+          isActive: task.isActive,
+          createdAt: task.createdAt,
+          nextRunTime: task.nextRunTime,
+          lastRunTime: task.lastRunTime
+        });
+      });
+    });
+    
+    const result = Object.values(usernameGroups);
+    
+    res.json({ 
+      success: true,
+      email,
+      usernameCount: result.length,
+      usernames: result,
+      message: `พบการแจ้งเตือนสำหรับ ${result.length} usernames`
+    });
+  } catch (error) {
+    console.log(`❌ Error ดูการแจ้งเตือน username: ${error.message}`);
+    res.status(500).json({ error: 'เกิดข้อผิดพลาดในการดูการแจ้งเตือน' });
   }
 });
 
