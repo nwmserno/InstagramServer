@@ -201,7 +201,8 @@ async function sendBanAlert(username, msg) {
 // ฟังก์ชันส่งอีเมลรวมหลาย username
 async function sendBulkEmail(usersData, email, isNotification = false, changes = null) {
   try {
-    let transporter = nodemailer.createTransporter({
+    // ใช้ createTransport เท่านั้น
+    let transporter = nodemailer.createTransport({
       service: 'gmail',
       auth: {
         user: process.env.EMAIL_USER,
